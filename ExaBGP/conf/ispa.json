@@ -1,0 +1,77 @@
+version 21.2R1.10;
+system {
+    host-name ispa;
+    root-authentication {
+        encrypted-password "$6$rCkFlEMk$dilS899FdaxUDwZIOexLVNogvTidRYvafIZqC/pBduiTgAmajk0cgRBpEPTUarZil/fLt65TYaaytSTBAMa5V/"; ## SECRET-DATA
+    }
+    login {
+        user admin {
+            uid 2000;
+            class super-user;
+            authentication {
+                encrypted-password "$6$89tBEdN8$6hTVF5O8XTBHZevs5xbm7/cxBbCNpAEDct8bGCNGWPMREHy2GO2Dir5eATb2XnnJkopVxvPN3p.k0kLdJOw6./"; ## SECRET-DATA
+            }
+        }
+    }
+    services {
+        ssh;
+        extension-service {
+            request-response {
+                grpc {
+                    clear-text {
+                        port 57400;
+                    }
+                    max-connections 4;
+                }
+            }
+        }
+        netconf {
+            ssh;
+            rfc-compliant;
+        }
+    }
+    syslog {
+        file interactive-commands {
+            interactive-commands any;
+        }
+        file messages {
+            any notice;
+            authorization info;
+        }
+    }
+}
+chassis {
+    fpc 0 {
+        pic 0 {
+            number-of-ports 96;
+        }
+    }
+}
+interfaces {
+    ge-0/0/1 {
+        unit 0 {
+            family inet {
+                address 172.16.2.2/24;
+            }
+        }
+    }
+    fxp0 {                              
+        unit 0 {
+            family inet {
+                address 10.0.0.15/24;
+            }
+        }
+    }
+}
+routing-options {
+    autonomous-system 65001;
+}
+protocols {
+    bgp {
+        group EXTERNAL {
+            neighbor 172.16.2.1 {
+                peer-as 65000;
+            }
+        }
+    }
+}

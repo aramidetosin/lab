@@ -1,0 +1,38 @@
+name: irt
+prefix: ""
+
+topology:
+
+  kinds:
+    vr-vmx: 
+      image: aoluwatosin10/vr-vmx:21.2R1.10
+
+  nodes:
+    ispa:
+      kind: vr-vmx
+      mgmt_ipv4: 172.20.20.11
+      startup-config: conf/ispa.json
+    internet: # ifconfig eth1 172.16.2.1 netmask 255.255.255.0 up
+      kind: linux
+      image: aoluwatosin10/exabgp-irt
+      mgmt_ipv4: 172.20.20.13
+    ssh:
+      kind: linux
+      image: netreplica/graphite:webssh2
+      mgmt_ipv4: 172.20.20.100
+      env:
+        GRAPHITE_DEFAULT_TYPE: clab
+        GRAPHITE_DEFAULT_TOPO: irt
+        CLAB_SSH_CONNECTION: ${SSH_CONNECTION}
+      binds:
+        - .:/var/www/localhost/htdocs/clab
+      ports:
+        - 8080:80
+      exec:
+        - sh -c 'generate_offline_graph.sh'
+        - sh -c 'graphite_motd.sh 8080'
+      labels:
+        graph-hide: yes
+  links:
+    - endpoints: ["ispa:eth2", "internet:eth1"]
+

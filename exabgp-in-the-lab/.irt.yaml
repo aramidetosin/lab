@@ -1,0 +1,61 @@
+name: irt
+prefix: ""
+
+topology:
+
+  kinds:
+    ceos:
+      image: ceos:4.28.0F
+    srl:
+      image: ghcr.io/nokia/srlinux
+
+  nodes:
+    ispa:
+      kind: srl
+      startup-config: conf/ispa.json
+      mgmt_ipv4: 172.20.20.11
+    ispb:
+      kind: srl
+      startup-config: conf/ispb.json
+      mgmt_ipv4: 172.20.20.12
+    internet: # ifconfig eth1 172.16.2.1 netmask 255.255.255.0 up
+      kind: linux
+      image: aoluwatosin10/exabgp-irt
+      mgmt_ipv4: 172.20.20.13
+    cmpa1:
+      kind: ceos
+      startup-config: conf/cmpa1.conf
+      mgmt_ipv4: 172.20.20.14
+    cmpa2:
+      kind: ceos
+      startup-config: conf/cmpa2.conf
+      mgmt_ipv4: 172.20.20.15
+    cloud:
+      kind: ceos
+      startup-config: conf/cloud.conf
+      mgmt_ipv4: 172.20.20.16
+    ssh:
+      kind: linux
+      image: netreplica/graphite:webssh2
+      mgmt_ipv4: 172.20.20.100
+      env:
+        GRAPHITE_DEFAULT_TYPE: clab
+        GRAPHITE_DEFAULT_TOPO: irt
+        CLAB_SSH_CONNECTION: ${SSH_CONNECTION}
+      binds:
+        - .:/var/www/localhost/htdocs/clab
+      ports:
+        - 8080:80
+      exec:
+        - sh -c 'generate_offline_graph.sh'
+        - sh -c 'graphite_motd.sh 8080'
+      labels:
+        graph-hide: yes
+  links:
+    - endpoints: ["cloud:eth1", "internet:eth1"]
+    - endpoints: ["cloud:eth2", "ispa:e1-1"]
+    - endpoints: ["cloud:eth3", "ispb:e1-1"]
+    - endpoints: ["ispa:e1-2", "cmpa1:eth1"]
+    - endpoints: ["ispb:e1-2", "cmpa2:eth1"]
+    - endpoints: ["cmpa1:eth2", "cmpa2:eth2"]
+

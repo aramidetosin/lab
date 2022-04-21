@@ -1,0 +1,12 @@
+all:
+  children:
+    linux:
+      hosts:
+        internet:
+          ansible_host: 172.20.20.13
+        ssh:
+          ansible_host: 172.20.20.100
+    vr-vmx:
+      hosts:
+        ispa:
+          ansible_host: 172.20.20.11
